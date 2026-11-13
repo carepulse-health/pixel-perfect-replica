@@ -28,3 +28,9 @@ use the editor.
   own key and store it in Secrets.
 - **Secrets.** Lovable manages them. Do not put secret values in the repo.
 <!-- LOVABLE:END -->
+
+## CarePulse architecture
+
+- Clinic data is read and changed through authenticated TanStack server functions with Supabase RLS; database triggers and the Lagos-time scheduled PostgreSQL job own idempotent workflows, keeping sensitive writes clinic-scoped and reusable by other CarePulse apps.
+
+- The primary staff experience lives on the `/` screen and switches named work areas in-place so clinic staff can monitor, search, and act without route-guarding clinic data in SSR loaders.
