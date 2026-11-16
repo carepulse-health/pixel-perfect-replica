@@ -95,9 +95,9 @@ function Dashboard() {
             <h1 className="mt-1 text-2xl font-semibold tracking-normal sm:text-3xl">Clinic dashboard</h1>
             <p className="mt-2 text-sm text-muted-foreground">A clear view of care happening today.</p>
           </div>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <span className="size-2 rounded-full bg-primary" aria-hidden="true" />
-            Live clinic data
+          <div className="flex items-center gap-2 text-sm text-muted-foreground" role="status" aria-live="polite">
+            <span className={`size-2 rounded-full ${error ? "bg-destructive" : "bg-primary"}`} aria-hidden="true" />
+            {error ? "Clinic data unavailable" : isPending ? "Connecting to clinic data" : "Live clinic data"}
           </div>
         </section>
 
@@ -112,9 +112,9 @@ function Dashboard() {
         ) : null}
 
         <section aria-label="Clinic summary" className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
-          <SummaryCard icon={<Users aria-hidden="true" />} label="Patients" value={isPending ? null : data?.stats.patients ?? 0} detail="Registered with your clinic" tone="teal" />
-          <SummaryCard icon={<CalendarDays aria-hidden="true" />} label="Upcoming appointments" value={isPending ? null : upcomingAppointments.length} detail="Scheduled from now onward" tone="blue" />
-          <SummaryCard icon={<AlertTriangle aria-hidden="true" />} label="Active alerts" value={isPending ? null : emergencyCount} detail="Needs prompt attention" tone="rose" />
+          <SummaryCard icon={<Users aria-hidden="true" />} label="Patients" value={isPending ? null : error ? "—" : data?.stats.patients ?? 0} detail={error ? "Data unavailable" : "Registered with your clinic"} tone="teal" />
+          <SummaryCard icon={<CalendarDays aria-hidden="true" />} label="Upcoming appointments" value={isPending ? null : error ? "—" : upcomingAppointments.length} detail={error ? "Data unavailable" : "Scheduled from now onward"} tone="blue" />
+          <SummaryCard icon={<AlertTriangle aria-hidden="true" />} label="Active alerts" value={isPending ? null : error ? "—" : emergencyCount} detail={error ? "Data unavailable" : "Needs prompt attention"} tone="rose" />
         </section>
 
         <div className="mt-8 grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
@@ -124,11 +124,13 @@ function Dashboard() {
                 <h2 id="reminders-title" className="text-lg font-semibold">Upcoming reminders</h2>
                 <p className="mt-1 text-sm text-muted-foreground">The next appointments on your schedule</p>
               </div>
-              <span className="shrink-0 text-sm text-muted-foreground">{upcomingAppointments.length} scheduled</span>
+              <span className="shrink-0 text-sm text-muted-foreground">{error ? "Unavailable" : `${upcomingAppointments.length} scheduled`}</span>
             </div>
             <div className="divide-y divide-border border-y border-border bg-card">
               {isPending ? (
                 <LoadingRows />
+              ) : error ? (
+                <UnavailableState />
               ) : upcomingAppointments.length ? (
                 upcomingAppointments.slice(0, 8).map((appointment) => <AppointmentRow key={appointment.id} appointment={appointment} />)
               ) : (
@@ -148,6 +150,8 @@ function Dashboard() {
             <div className="divide-y divide-border border-y border-border bg-card">
               {isPending ? (
                 <LoadingRows />
+              ) : error ? (
+                <UnavailableState />
               ) : emergencyCount ? (
                 <div className="divide-y divide-border">
                   {activeAlerts.map((alert) => (
@@ -172,7 +176,7 @@ function Dashboard() {
   );
 }
 
-function SummaryCard({ icon, label, value, detail, tone }: { icon: ReactNode; label: string; value: number | null; detail: string; tone: "teal" | "blue" | "rose" }) {
+function SummaryCard({ icon, label, value, detail, tone }: { icon: ReactNode; label: string; value: number | string | null; detail: string; tone: "teal" | "blue" | "rose" }) {
   const iconTone = tone === "teal" ? "bg-primary/10 text-primary" : tone === "blue" ? "bg-accent text-accent-foreground" : "bg-destructive/10 text-destructive";
   return (
     <div className="flex min-h-36 items-start justify-between gap-3 border border-border bg-card p-5">
@@ -224,6 +228,15 @@ function EmptyState({ icon, title, description }: { icon: ReactNode; title: stri
       <span className="flex size-11 items-center justify-center rounded-full bg-accent text-accent-foreground">{icon}</span>
       <p className="mt-3 font-medium">{title}</p>
       <p className="mt-1 max-w-xs text-sm text-muted-foreground">{description}</p>
+    </div>
+  );
+}
+
+function UnavailableState() {
+  return (
+    <div className="px-5 py-8 text-center">
+      <p className="font-medium">Clinic records couldn’t be loaded</p>
+      <p className="mt-1 text-sm text-muted-foreground">Try refreshing once clinic staff access is available.</p>
     </div>
   );
 }
