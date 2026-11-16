@@ -53,11 +53,12 @@ function Dashboard() {
     queryKey: ["carepulse-dashboard"],
     queryFn: () => fetchDashboard(),
     refetchInterval: 60_000,
+    retry: false,
   });
 
   const now = new Date();
   const upcomingAppointments = ((data?.appointments ?? []) as Appointment[])
-    .filter((appointment) => new Date(`${appointment.appointment_date}T${appointment.appointment_time}`).getTime() >= now.getTime())
+    .filter((appointment) => appointmentTimestamp(appointment) >= now.getTime())
     .sort((first, second) => appointmentTimestamp(first) - appointmentTimestamp(second));
   const activeAlerts = ((data?.triage ?? []) as TriageAlert[]).filter((alert) =>
     alert.review_status !== "reviewed" && /urgent|high|emergency|critical/i.test(alert.priority_level),
